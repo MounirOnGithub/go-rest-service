@@ -8,6 +8,7 @@ import (
 
 func main() {
 	r := utils.NewRouter()
+	logrus.Info("Listening on port 8080")
 	err := http.ListenAndServe(":8080", r)
 
 	if err != nil {
