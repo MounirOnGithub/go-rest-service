@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/MounirOnGithub/go-rest-service/handler"
 	"net/http"
+
+	"github.com/MounirOnGithub/go-rest-service-dh/handler"
 )
 
 type Route struct {
@@ -16,33 +17,33 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		Name: "Hello",
-		Method: "GET",
-		Pattern: "/",
+		Name:        "Hello",
+		Method:      "GET",
+		Pattern:     "/",
 		HandlerFunc: handler.Hello,
 	},
 	Route{
-		Name: "GetGlucoses",
-		Method: "GET",
-		Pattern: "/glucoses",
+		Name:        "GetGlucoses",
+		Method:      "GET",
+		Pattern:     "/glucoses",
 		HandlerFunc: handler.GetGlucoses,
 	},
 	Route{
-		Name: "GetGlucoseByID",
-		Method: "GET",
-		Pattern: "/glucose/{id}",
+		Name:        "GetGlucoseByID",
+		Method:      "GET",
+		Pattern:     "/glucose/{id}",
 		HandlerFunc: handler.GetGlucoseByID,
 	},
 	Route{
-		Name: "AddGlucose",
-		Method: "POST",
-		Pattern: "/glucoses",
+		Name:        "AddGlucose",
+		Method:      "POST",
+		Pattern:     "/glucoses",
 		HandlerFunc: handler.AddGlucose,
 	},
 	Route{
-		Name: "DeleteGlucose",
-		Method: "DELETE",
-		Pattern: "/glucose/{id}",
+		Name:        "DeleteGlucose",
+		Method:      "DELETE",
+		Pattern:     "/glucose/{id}",
 		HandlerFunc: handler.DeleteGlucose,
 	},
 }
