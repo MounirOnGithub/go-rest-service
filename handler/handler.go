@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
-	"net/http"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 func Hello(w http.ResponseWriter, r *http.Request) {
