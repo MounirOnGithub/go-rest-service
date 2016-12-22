@@ -29,7 +29,7 @@ func main() {
 
 	// Using middleware for the user sub router
 	r.PathPrefix("/user").Handler(negroni.New(
-		negroni.HandlerFunc(utils.MyMiddleware),
+		negroni.HandlerFunc(utils.JWTValidationMiddleware),
 		negroni.Wrap(userSubRouter),
 	))
 
