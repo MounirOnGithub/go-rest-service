@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,19 +12,20 @@ import (
 )
 
 const (
-	secretKey = "secret"
+	SecretKey = "secret"
 	// ResponseHeaderContentTypeKey is the key used for response content type
 	ResponseHeaderContentTypeKey = "Content-Type"
 	// ResponseHeaderContentTypeJSONUTF8 is the key used for UTF8 JSON response
 	ResponseHeaderContentTypeJSONUTF8 = "application/json; charset=UTF-8"
 )
 
+// Claims claims of the jwt
 type Claims struct {
 	UserName string
 	jwt.StandardClaims
 }
 
-// MyMiddleware middleware
+// JWTValidationMiddleware validation of Jwt
 func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	// do some stuff before
 	authorization := r.Header.Get("Authorization")
@@ -31,6 +33,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 
 	if authorization != "" {
 		el := strings.Split(authorization, " ")
+		fmt.Println(el)
 		if len(el) == 2 {
 			token = el[1]
 		} else {
@@ -40,6 +43,8 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 		}
 	}
 
+	fmt.Println(token)
+
 	if token == "" {
 		logrus.WithField("token", token).Debug("Unable to get token.")
 		JSONWithHTTPCode(rw, MsgMissingAuth, http.StatusUnauthorized)
@@ -47,7 +52,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 
 	c := &Claims{}
 	jwtToken, err := jwt.ParseWithClaims(token, c, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
+		return []byte(SecretKey), nil
 	})
 
 	if err != nil {
