@@ -7,10 +7,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello World!\n")
-}
-
 func GetGlucoses(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "GET /glucoses \n")
 }

@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
+
 	n := negroni.New()
 	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "go-rest-service"))
 	// Recovery middleware for responding 500 while having a panic
@@ -29,7 +31,7 @@ func main() {
 
 	// Using middleware for the user sub router
 	r.PathPrefix("/user").Handler(negroni.New(
-		negroni.HandlerFunc(utils.MyMiddleware),
+		negroni.HandlerFunc(utils.JWTValidationMiddleware),
 		negroni.Wrap(userSubRouter),
 	))
 
