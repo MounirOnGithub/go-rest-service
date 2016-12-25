@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	// SecretKey the secret for the signature
 	SecretKey = "secret"
 	// ResponseHeaderContentTypeKey is the key used for response content type
 	ResponseHeaderContentTypeKey = "Content-Type"
@@ -37,7 +38,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 		if len(el) == 2 {
 			token = el[1]
 		} else {
-			logrus.WithField("Authorization header", authorization).Debug("Authorization header is wrong or malformed")
+			logrus.WithField("Authorization header", authorization).Warn("Authorization header is wrong or malformed")
 			JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
 			return
 		}
@@ -46,7 +47,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 	fmt.Println(token)
 
 	if token == "" {
-		logrus.WithField("token", token).Debug("Unable to get token.")
+		logrus.WithField("token", token).Warn("Unable to get token.")
 		JSONWithHTTPCode(rw, MsgMissingAuth, http.StatusUnauthorized)
 	}
 
@@ -56,7 +57,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 	})
 
 	if err != nil {
-		logrus.WithField("Authorization header", authorization).WithField("error", err).Debug("Error parsing jwt token")
+		logrus.WithField("Authorization header", authorization).WithField("error", err).Warn("Error parsing jwt token")
 		JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
 		return
 	}
@@ -65,11 +66,11 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 		// authSum = &claims.AuthenticationSummaryLight
 		ctx := context.WithValue(r.Context(), "claims", claims)
 		next(rw, r.WithContext(ctx))
-	} else {
-		logrus.WithField("Authorization header", authorization).Debug("Invalid jwt token, check key or alg")
-		JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
 		return
 	}
+
+	logrus.WithField("Authorization header", authorization).Warn("Invalid jwt token, check key or alg")
+	JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
 
 	next(rw, r)
 }

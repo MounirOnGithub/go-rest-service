@@ -46,8 +46,7 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 	c := utils.Claims{
 		UserName: "nirmou",
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: 15000,
-			Issuer:    "myApp",
+			Issuer: "myApp",
 		},
 	}
 
@@ -57,14 +56,13 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(mySigningKey)
 	if err != nil {
-		logrus.WithField("token", tokenString).Debug(err)
+		logrus.WithField("token", tokenString).Warn(err)
 	}
-	fmt.Println(tokenString)
 	fmt.Fprintf(w, "POST Login handler, token = %s", tokenString)
 }
 
 // Hello handler saying hello
 func Hello(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("claims")
-	fmt.Fprintf(w, "Context objet : \n %+v", ctx)
+	fmt.Fprintf(w, "Context : \n %+v", ctx)
 }

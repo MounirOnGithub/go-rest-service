@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
+
 	n := negroni.New()
 	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "go-rest-service"))
 	// Recovery middleware for responding 500 while having a panic
