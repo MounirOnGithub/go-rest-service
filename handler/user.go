@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -41,24 +42,38 @@ func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 
 // LogIn logging in the user
 func LogIn(w http.ResponseWriter, r *http.Request) {
+	user := model.User{}
 
+	err := utils.GetJSONContent(&user, r)
+	if err != nil {
+		logrus.WithField("error= ", err).Warn("Error while retrieving user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
+	// TODO: verify in database the user exist
+
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
 	c := utils.Claims{
-		UserName: "nirmou",
+		UserName: user.Username,
 		StandardClaims: jwt.StandardClaims{
-			Issuer:    "myApp",
-			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		},
 	}
 
 	mySigningKey := []byte(utils.SecretKey)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 
+	auth := model.Authentification{}
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(mySigningKey)
 	if err != nil {
 		logrus.WithField("token", tokenString).Warn(err)
 	}
-	fmt.Fprintf(w, "POST Login handler, token = %s", tokenString)
+	auth.Token = tokenString
+
+	utils.JSONWithHTTPCode(w, auth, http.StatusCreated)
 }
 
 // Hello handler saying hello

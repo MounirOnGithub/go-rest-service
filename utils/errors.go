@@ -23,6 +23,7 @@ const (
 	TypeNotFoundError = "NOT_FOUND"
 )
 
+// Errors struct for API error
 type Errors struct {
 	Message string
 	Type    string
@@ -30,6 +31,17 @@ type Errors struct {
 }
 
 var (
+	//  --------------------- 400 ---------------------------------------
+
+	// MsgBadParameter is the error definition for an invalid paramater
+	MsgBadParameter = Errors{
+		Type:    TypeValidationError,
+		Message: "A least one paramater is invalid",
+		Tip:     "Please check your parameters or payload",
+	}
+
+	//  --------------------- 403 ---------------------------------------
+
 	// MsgTokenMalformed is the error definition for malformed token
 	MsgTokenMalformed = Errors{
 		Type:    TypeAuthorizationError,
@@ -51,6 +63,22 @@ var (
 		Tip:     "Add Authorization Header with the token to your request",
 	}
 
+	// MsgTokenIsRevoked is the error definition for revoked token
+	MsgTokenIsRevoked = Errors{
+		Type:    TypeAuthorizationError,
+		Message: "Token has been revoked",
+		Tip:     "Create a new access token and then retry",
+	}
+
+	// MsgTokenHasExpired is the error definition for expired token
+	MsgTokenHasExpired = Errors{
+		Type:    TypeAuthorizationError,
+		Message: "Token has expired",
+		Tip:     "Refresh the access token and then retry",
+	}
+
+	//  --------------------- 404 ---------------------------------------
+
 	// MsgEndpointDoesNotExist is the error definition for user not found
 	MsgEndpointDoesNotExist = Errors{
 		Type:    TypeNotFoundError,
@@ -64,6 +92,8 @@ var (
 		Message: "Entity doesn't exist",
 		Tip:     "Please check the id",
 	}
+
+	//  --------------------- 500 ---------------------------------------
 
 	// MsgInternalServerError is the error definition for internal server error
 	MsgInternalServerError = Errors{
