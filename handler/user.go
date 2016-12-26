@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
@@ -40,13 +41,12 @@ func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 
 // LogIn logging in the user
 func LogIn(w http.ResponseWriter, r *http.Request) {
-	// Create a new token object, specifying signing method and the claims
-	// you would like it to contain.
 
 	c := utils.Claims{
 		UserName: "nirmou",
 		StandardClaims: jwt.StandardClaims{
-			Issuer: "myApp",
+			Issuer:    "myApp",
+			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 		},
 	}
 
