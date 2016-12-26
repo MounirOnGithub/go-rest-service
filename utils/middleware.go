@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -24,7 +23,6 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 
 	if authorization != "" {
 		el := strings.Split(authorization, " ")
-		fmt.Println(el)
 		if len(el) == 2 {
 			token = el[1]
 		} else {
@@ -33,8 +31,6 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 			return
 		}
 	}
-
-	fmt.Println(token)
 
 	if token == "" {
 		logrus.WithField("token", token).Warn("Unable to get token.")
