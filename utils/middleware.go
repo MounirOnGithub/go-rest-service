@@ -2,22 +2,11 @@ package utils
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
-)
-
-const (
-	// SecretKey the secret for the signature
-	SecretKey = "secret"
-	// ResponseHeaderContentTypeKey is the key used for response content type
-	ResponseHeaderContentTypeKey = "Content-Type"
-	// ResponseHeaderContentTypeJSONUTF8 is the key used for UTF8 JSON response
-	ResponseHeaderContentTypeJSONUTF8 = "application/json; charset=UTF-8"
 )
 
 // Claims claims of the jwt
@@ -34,7 +23,6 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 
 	if authorization != "" {
 		el := strings.Split(authorization, " ")
-		fmt.Println(el)
 		if len(el) == 2 {
 			token = el[1]
 		} else {
@@ -43,8 +31,6 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 			return
 		}
 	}
-
-	fmt.Println(token)
 
 	if token == "" {
 		logrus.WithField("token", token).Warn("Unable to get token.")
@@ -73,17 +59,4 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 	JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
 
 	next(rw, r)
-}
-
-// JSONWithHTTPCode Json Output with an HTTP code
-func JSONWithHTTPCode(w http.ResponseWriter, d interface{}, code int) {
-	w.Header().Set(ResponseHeaderContentTypeKey, ResponseHeaderContentTypeJSONUTF8)
-	w.WriteHeader(code)
-	if d != nil {
-		err := json.NewEncoder(w).Encode(d)
-		if err != nil {
-			// panic will cause the http.StatusInternalServerError to be send to users
-			panic(err)
-		}
-	}
 }

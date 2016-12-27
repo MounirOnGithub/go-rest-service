@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -13,14 +14,39 @@ import (
 
 // AddUser POST a new user
 func AddUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "POST /user")
+	// Add fields of user struct
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+	name := r.FormValue("name")
+	surname := r.FormValue("surname")
+
+	// TODO: Password encoding
+
+	user := model.User{
+		Username: username,
+		Name:     name,
+		Surname:  surname,
+		Password: password,
+	}
+
+	// TODO: Create a new entry in db
+	// TODO: Check if the user not already exist
+
+	logrus.Info("New user created")
+	utils.JSON(w, user)
 }
 
 // GetUserByID fetch a user by its ID
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID := vars["id"]
-	fmt.Fprintf(w, "GET /user/%v", userID)
+	// vars := mux.Vars(r)
+	// userID := vars["id"]
+
+	user := model.User{}
+
+	// TODO: Find user in database
+
+	logrus.Info("Fetched a user")
+	utils.JSONWithHTTPCode(w, user, http.StatusOK)
 }
 
 // UpdateUserByID PUT modify a user by ID
@@ -28,37 +54,69 @@ func UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	fmt.Fprintf(w, "PUT /user/%v", userID)
+	user := model.User{
+		ID: userID,
+	}
+	// TODO: Find user in database to update
+
+	err := utils.GetJSONContent(&user, r)
+	if err != nil {
+		logrus.WithField("err= ", err).Warn("Error while retrieving user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
+	logrus.Info("Updated successfully")
+	utils.JSONWithHTTPCode(w, user, http.StatusOK)
 }
 
 // DeleteUserByID deleting a user by its ID
 func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID := vars["id"]
+	// vars := mux.Vars(r)
+	// userID := vars["id"]
 
-	fmt.Fprintf(w, "DELETE /user/%v", userID)
+	// TODO: Remove user from database
+	logrus.Info("Remove successfully")
+	utils.JSONWithHTTPCode(w, nil, http.StatusNoContent)
 }
 
 // LogIn logging in the user
 func LogIn(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+	user := model.User{
+		Username: username,
+	}
 
+	if username == "" || password == "" {
+		logrus.Warn("Error while retrieving user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
+	// TODO: verify in database the user exist
+
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
 	c := utils.Claims{
-		UserName: "nirmou",
+		UserName: user.Username,
 		StandardClaims: jwt.StandardClaims{
-			Issuer:    "myApp",
-			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		},
 	}
 
 	mySigningKey := []byte(utils.SecretKey)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 
+	auth := model.Authentification{}
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(mySigningKey)
 	if err != nil {
 		logrus.WithField("token", tokenString).Warn(err)
 	}
-	fmt.Fprintf(w, "POST Login handler, token = %s", tokenString)
+	auth.Token = tokenString
+
+	utils.JSONWithHTTPCode(w, auth, http.StatusCreated)
 }
 
 // Hello handler saying hello
