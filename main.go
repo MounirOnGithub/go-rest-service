@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/MounirOnGithub/go-rest-service/dao"
 	"github.com/MounirOnGithub/go-rest-service/handler"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
@@ -21,6 +22,7 @@ var (
 	port      = 8080
 	logLevel  = "debug"
 	logFormat = "text_color"
+	mock      = false
 
 	// Version is the version of the software
 	Version string
@@ -61,6 +63,11 @@ func main() {
 			Name:  "logf",
 			Usage: "Set the log formatter (logstash or text)",
 		},
+		cli.StringFlag{
+			Value: logFormat,
+			Name:  "mock",
+			Usage: "Set the mock mode for Mocking database",
+		},
 	}
 
 	cliApp.Action = func(c *cli.Context) error {
@@ -72,6 +79,7 @@ func main() {
 		fmt.Printf("|   port                    : %d\n", port)
 		fmt.Printf("|   logger level            : %s\n", logLevel)
 		fmt.Printf("|   logger format           : %s\n", logFormat)
+		fmt.Printf("|   mock                    : %v\n", mock)
 		fmt.Print("* --------------------------------------------------- *\n")
 
 		n := negroni.New()
@@ -82,13 +90,31 @@ func main() {
 		recovery.PrintStack = false
 		n.Use(recovery)
 
+		var d dao.Dao
+		if mock {
+			d, err = dao.NewDaoMock()
+
+		} else {
+			d, err = dao.NewDao()
+		}
+
+		if err != nil {
+			logrus.WithField("err", err).Fatal("Failed attempt to initialize DAO")
+		}
+
+		uh := handler.NewUserHandler(d)
+
 		// Router
 		r := mux.NewRouter()
-		r.HandleFunc("/login", handler.LogIn).Methods(http.MethodPost)
+		r.HandleFunc("/login", uh.LogIn).Methods(http.MethodPost)
 
 		// User sub router
 		userSubRouter := mux.NewRouter().PathPrefix("/user").Subrouter().StrictSlash(true)
-		userSubRouter.HandleFunc("/", handler.Hello).Methods(http.MethodGet)
+		userSubRouter.HandleFunc("/", uh.Hello).Methods(http.MethodGet)
+		userSubRouter.HandleFunc("/{id}", uh.UpdateUserByID).Methods(http.MethodPut)
+		userSubRouter.HandleFunc("/{id}", uh.DeleteUserByID).Methods(http.MethodDelete)
+		userSubRouter.HandleFunc("/new", uh.AddUser).Methods(http.MethodPost)
+		userSubRouter.HandleFunc("/{id}", uh.GetUserByID).Methods(http.MethodGet)
 
 		// Using middleware for the user sub router
 		r.PathPrefix("/user").Handler(negroni.New(

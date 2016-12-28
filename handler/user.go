@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MounirOnGithub/go-rest-service/dao"
 	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
@@ -12,8 +13,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// UserHandler handler containing dao
+type UserHandler struct {
+	dao dao.Dao
+}
+
+// NewUserHandler returns a new UserHandler
+func NewUserHandler(dao dao.Dao) UserHandler {
+	return UserHandler{
+		dao: dao,
+	}
+}
+
 // AddUser POST a new user
-func AddUser(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	// Add fields of user struct
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -37,7 +50,7 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserByID fetch a user by its ID
-func GetUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// userID := vars["id"]
 
@@ -50,7 +63,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateUserByID PUT modify a user by ID
-func UpdateUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
@@ -71,7 +84,7 @@ func UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteUserByID deleting a user by its ID
-func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 	// vars := mux.Vars(r)
 	// userID := vars["id"]
 
@@ -81,7 +94,7 @@ func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // LogIn logging in the user
-func LogIn(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	user := model.User{
@@ -120,7 +133,7 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 }
 
 // Hello handler saying hello
-func Hello(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) Hello(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context().Value("claims")
 	fmt.Fprintf(w, "Context : \n %+v", ctx)
 }
