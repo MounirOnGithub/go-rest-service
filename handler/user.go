@@ -33,17 +33,28 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	surname := r.FormValue("surname")
 
-	// TODO: Password encoding
-
-	user := model.User{
+	user := &model.User{
 		Username: username,
-		Name:     name,
-		Surname:  surname,
-		Password: password,
 	}
 
-	// TODO: Create a new entry in db
-	// TODO: Check if the user not already exist
+	// Verify if the user exist
+	user, err := uh.dao.GetUserByUserName(username)
+	if err != nil {
+		logrus.WithField("err", err).Warn("Error while fetching user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Password encoding
+	user.Password = password
+	user.Name = name
+	user.Surname = surname
+	user.Username = username
+
+	user, err = uh.dao.UpdateUser(user)
+	if err != nil {
+		logrus.WithField("err=", err).Warn("Error while updating user")
+	}
 
 	logrus.Info("New user created")
 	utils.JSON(w, user)
@@ -51,12 +62,15 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 
 // GetUserByID fetch a user by its ID
 func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// userID := vars["id"]
-
-	user := model.User{}
-
-	// TODO: Find user in database
+	vars := mux.Vars(r)
+	userID := vars["id"]
+	user := &model.User{}
+	user, err := uh.dao.GetUserByID(userID)
+	if err != nil {
+		logrus.WithField("err", err).Warn("Error while fetching user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
 
 	logrus.Info("Fetched a user")
 	utils.JSONWithHTTPCode(w, user, http.StatusOK)
@@ -65,14 +79,17 @@ func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 // UpdateUserByID PUT modify a user by ID
 func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+
 	userID := vars["id"]
-
-	user := model.User{
-		ID: userID,
+	user := &model.User{}
+	user, err := uh.dao.GetUserByID(userID)
+	if err != nil {
+		logrus.WithField("err", err).Warn("Error while fetching user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
 	}
-	// TODO: Find user in database to update
 
-	err := utils.GetJSONContent(&user, r)
+	err = utils.GetJSONContent(&user, r)
 	if err != nil {
 		logrus.WithField("err= ", err).Warn("Error while retrieving user")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
@@ -85,10 +102,16 @@ func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUserByID deleting a user by its ID
 func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// userID := vars["id"]
+	vars := mux.Vars(r)
+	userID := vars["id"]
 
-	// TODO: Remove user from database
+	err := uh.dao.DeleteUser(userID)
+	if err != nil {
+		logrus.WithField("err=", err).Warn("Error while deleting user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
 	logrus.Info("Remove successfully")
 	utils.JSONWithHTTPCode(w, nil, http.StatusNoContent)
 }
@@ -97,8 +120,9 @@ func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	user := model.User{
+	user := &model.User{
 		Username: username,
+		// TODO: Password encryption
 	}
 
 	if username == "" || password == "" {
@@ -107,7 +131,12 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: verify in database the user exist
+	user, err := uh.dao.GetUserByUserName(username)
+	if err != nil {
+		logrus.WithField("err", err).Warn("Error while fetching user")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
