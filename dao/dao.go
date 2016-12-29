@@ -1,6 +1,8 @@
 package dao
 
-import "github.com/MounirOnGithub/go-rest-service/model"
+import (
+	"github.com/MounirOnGithub/go-rest-service/model"
+)
 
 // Dao interface needs all operations for database
 type Dao interface {

@@ -25,6 +25,15 @@ func NewUserHandler(dao dao.Dao) UserHandler {
 	}
 }
 
+// IfUserExist check if the user already exist in db
+func (uh *UserHandler) IfUserExist(userName string) bool {
+	_, err := uh.dao.GetUserByUserName(userName)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 // AddUser POST a new user
 func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	// Add fields of user struct
@@ -33,25 +42,24 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	surname := r.FormValue("surname")
 
-	user := &model.User{
-		Username: username,
-	}
-
 	// Verify if the user exist
-	user, err := uh.dao.GetUserByUserName(username)
-	if err != nil {
-		logrus.WithField("err", err).Warn("Error while fetching user")
+	exist := uh.IfUserExist(username)
+	if exist {
+		logrus.WithField("username=", username).Warn("User already exists")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
 
+	user := &model.User{
+		Username: username,
+		Name: name,
+		Surname: surname,
+	}
+
 	// TODO: Password encoding
 	user.Password = password
-	user.Name = name
-	user.Surname = surname
-	user.Username = username
 
-	user, err = uh.dao.UpdateUser(user)
+	user, err := uh.dao.AddUser(user)
 	if err != nil {
 		logrus.WithField("err=", err).Warn("Error while updating user")
 	}
@@ -140,11 +148,13 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
-	c := utils.Claims{
-		UserName: user.Username,
-		StandardClaims: jwt.StandardClaims{
+	c := utils.Claims{}
+
+	if user != nil {
+		c.UserName = user.Username
+		c.StandardClaims = jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
-		},
+		}
 	}
 
 	mySigningKey := []byte(utils.SecretKey)
