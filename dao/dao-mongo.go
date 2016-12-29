@@ -26,14 +26,20 @@ func (dm *Mdb) AddUser(user *model.User) (*model.User, error) {
 }
 
 // DeleteUser delete a user from db
-func (dm *Mdb) DeleteUser(userID int) error {
+func (dm *Mdb) DeleteUser(userID string) error {
 	logrus.WithField("user ID", userID).Debug("DeleteUser")
 	return nil
 }
 
 // GetUserByID returns a user from db
-func (dm *Mdb) GetUserByID(userID int) (*model.User, error) {
+func (dm *Mdb) GetUserByID(userID string) (*model.User, error) {
 	logrus.WithField("user ID", userID).Debug("GetUserByID")
+	return dm.User, nil
+}
+
+// GetUserByUserName returns a mocked user
+func (dm *Mdb) GetUserByUserName(userName string) (*model.User, error) {
+	logrus.WithField("username", userName).Debug("GetUserByUserName")
 	return dm.User, nil
 }
 
