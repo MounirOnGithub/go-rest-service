@@ -33,15 +33,6 @@ var (
 	GitHash string
 )
 
-// GetSession create the session to connect to our MongoDB
-func GetSession() (*mgo.Session, error) {
-	s, err := mgo.Dial("mongodb://localhost")
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
-}
-
 func main() {
 
 	cliApp := cli.NewApp()
@@ -101,7 +92,7 @@ func main() {
 		n.Use(recovery)
 
 		var d dao.Dao
-		session, err := GetSession()
+		session, err := dao.GetSession()
 		if err != nil {
 			logrus.WithField("err=", err).Fatal("Can't connect to Mongo")
 		}

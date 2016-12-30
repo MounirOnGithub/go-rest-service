@@ -2,6 +2,7 @@ package dao
 
 import (
 	"github.com/MounirOnGithub/go-rest-service/model"
+	"gopkg.in/mgo.v2"
 )
 
 // Dao interface needs all operations for database
@@ -16,4 +17,13 @@ type Dao interface {
 	UpdateUser(user *model.User) (*model.User, error)
 	// DeleteUser delete a user from database
 	DeleteUser(userID string) error
+}
+
+// GetSession create the session to connect to our MongoDB
+func GetSession() (*mgo.Session, error) {
+	s, err := mgo.Dial("mongodb://localhost")
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }

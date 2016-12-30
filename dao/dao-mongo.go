@@ -24,8 +24,9 @@ func NewDao(session *mgo.Session) (Dao, error) {
 // AddUser create a new user in db
 func (dm *Mdb) AddUser(user *model.User) (*model.User, error) {
 	user.ID = "42"
+	session := dm.Session.Copy()
 
-	c := dm.Session.DB("go-rest-service").C("user")
+	c := session.DB("go-rest-service").C("user")
 	err := c.Insert(*user)
 	if err != nil {
 		return nil, err
