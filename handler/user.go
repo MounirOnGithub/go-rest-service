@@ -11,6 +11,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"encoding/base64"
 )
 
 // UserHandler handler containing dao
@@ -38,7 +39,7 @@ func (uh *UserHandler) IfUserExist(userName string) bool {
 func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	// Add fields of user struct
 	username := r.FormValue("username")
-	password := r.FormValue("password")
+	password := []byte(r.FormValue("password"))
 	name := r.FormValue("name")
 	surname := r.FormValue("surname")
 
@@ -56,8 +57,7 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		Surname: surname,
 	}
 
-	// TODO: Password encoding
-	user.Password = password
+	user.Password = base64.StdEncoding.EncodeToString(password)
 
 	user, err := uh.dao.AddUser(user)
 	if err != nil {
@@ -90,22 +90,24 @@ func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 
 	userID := vars["id"]
 	user := &model.User{}
-	user, err := uh.dao.GetUserByID(userID)
-	if err != nil {
-		logrus.WithField("err", err).Warn("Error while fetching user")
-		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
-		return
-	}
+	user.ID = userID
 
-	err = utils.GetJSONContent(&user, r)
+	err := utils.GetJSONContent(&user, r)
 	if err != nil {
 		logrus.WithField("err= ", err).Warn("Error while retrieving user")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
 
+	userModified, err := uh.dao.UpdateUser(user)
+	if err != nil {
+		logrus.WithField("err=", err).Warn("Error while updating user")
+		utils.JSONWithHTTPCode(w, utils.MsgInternalServerError, http.StatusInternalServerError)
+		return
+	}
+
 	logrus.Info("Updated successfully")
-	utils.JSONWithHTTPCode(w, user, http.StatusOK)
+	utils.JSONWithHTTPCode(w, userModified, http.StatusOK)
 }
 
 // DeleteUserByID deleting a user by its ID
@@ -127,14 +129,11 @@ func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 // LogIn logging in the user
 func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
-	password := r.FormValue("password")
-	user := &model.User{
-		Username: username,
-		// TODO: Password encryption
-	}
+	password := base64.StdEncoding.EncodeToString([]byte(r.FormValue("password")))
+	user := &model.User{}
 
 	if username == "" || password == "" {
-		logrus.Warn("Error while retrieving user")
+		logrus.Warn("username or password empty")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}

@@ -15,7 +15,6 @@ import (
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/urfave/cli"
 	"github.com/urfave/negroni"
-	"gopkg.in/mgo.v2"
 )
 
 var (

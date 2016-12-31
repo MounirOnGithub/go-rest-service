@@ -2,9 +2,15 @@ package dao
 
 import (
 	"github.com/MounirOnGithub/go-rest-service/model"
-	"github.com/Sirupsen/logrus"
-	"github.com/pkg/errors"
 	"gopkg.in/mgo.v2"
+	"github.com/satori/go.uuid"
+	"gopkg.in/mgo.v2/bson"
+	"fmt"
+)
+
+const (
+	database string = "go-rest-service"
+	collection string = "user"
 )
 
 // Mdb mocking database
@@ -23,10 +29,10 @@ func NewDao(session *mgo.Session) (Dao, error) {
 
 // AddUser create a new user in db
 func (dm *Mdb) AddUser(user *model.User) (*model.User, error) {
-	user.ID = "42"
+	user.ID = uuid.NewV4().String()
 	session := dm.Session.Copy()
 
-	c := session.DB("go-rest-service").C("user")
+	c := session.DB(database).C(collection)
 	err := c.Insert(*user)
 	if err != nil {
 		return nil, err
@@ -36,23 +42,48 @@ func (dm *Mdb) AddUser(user *model.User) (*model.User, error) {
 
 // DeleteUser delete a user from db
 func (dm *Mdb) DeleteUser(userID string) error {
-	logrus.WithField("user ID", userID).Debug("DeleteUser")
+	session := dm.Session.Copy()
+	c := session.DB(database).C(collection)
+	err := c.RemoveId(userID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // GetUserByID returns a user from db
 func (dm *Mdb) GetUserByID(userID string) (*model.User, error) {
-	logrus.WithField("user ID", userID).Debug("GetUserByID")
-	return nil, nil
+	session := dm.Session.Copy()
+
+	c := session.DB(database).C(collection)
+	u := &model.User{}
+	err := c.FindId(userID).One(u)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 // GetUserByUserName returns a mocked user
 func (dm *Mdb) GetUserByUserName(userName string) (*model.User, error) {
-	logrus.WithField("username", userName).Debug("GetUserByUserName")
-	return nil, errors.New("test")
+	session := dm.Session.Copy()
+
+	c := session.DB(database).C(collection)
+	u := &model.User{}
+	err := c.Find(bson.M{"username": userName}).One(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
 // UpdateUser modify a user from db
 func (dm *Mdb) UpdateUser(user *model.User) (*model.User, error) {
-	return nil, nil
+	session := dm.Session.Copy()
+	fmt.Println(*user)
+
+	c := session.DB(database).C(collection)
+	c.UpdateId(user.ID, user)
+	return user, nil
 }
