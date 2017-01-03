@@ -2,11 +2,11 @@ package model
 
 // User model User
 type User struct {
-	ID       string `json:"id,omitempty"`
-	Username string `json:"username,omitempty"`
-	Surname  string `json:"surname,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Password string `json:"password,omitempty"`
+	ID       string `json:"id" bson:"_id"`
+	Username string `json:"username" bson:"username"`
+	Surname  string `json:"surname,omitempty" bson:"surname"`
+	Name     string `json:"name,omitempty" bson:"name"`
+	Password string `json:"password,omitempty" bson:"password"`
 }
 
 // Authentification Response when logging in with success

@@ -45,7 +45,7 @@ func main() {
 	cliApp.Name = "go rest service"
 	cliApp.Authors = []cli.Author{{Name: "mkh"}}
 	cliApp.Copyright = "Mounir Khanouri" + strconv.Itoa(time.Now().Year())
-	cliApp.Usage = "Example of go REST service with JWT"
+	cliApp.Usage = "Example of go REST service"
 
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -91,11 +91,16 @@ func main() {
 		n.Use(recovery)
 
 		var d dao.Dao
+		session, err := dao.GetSession()
+		if err != nil {
+			logrus.WithField("err=", err).Fatal("Can't connect to Mongo")
+		}
+
 		if mock {
 			d, err = dao.NewDaoMock()
 
 		} else {
-			d, err = dao.NewDao()
+			d, err = dao.NewDao(session)
 		}
 
 		if err != nil {
@@ -107,13 +112,13 @@ func main() {
 		// Router
 		r := mux.NewRouter()
 		r.HandleFunc("/login", uh.LogIn).Methods(http.MethodPost)
+		r.HandleFunc("/register", uh.AddUser).Methods(http.MethodPost)
 
 		// User sub router
 		userSubRouter := mux.NewRouter().PathPrefix("/user").Subrouter().StrictSlash(true)
 		userSubRouter.HandleFunc("/", uh.Hello).Methods(http.MethodGet)
 		userSubRouter.HandleFunc("/{id}", uh.UpdateUserByID).Methods(http.MethodPut)
 		userSubRouter.HandleFunc("/{id}", uh.DeleteUserByID).Methods(http.MethodDelete)
-		userSubRouter.HandleFunc("/new", uh.AddUser).Methods(http.MethodPost)
 		userSubRouter.HandleFunc("/{id}", uh.GetUserByID).Methods(http.MethodGet)
 
 		// Using middleware for the user sub router

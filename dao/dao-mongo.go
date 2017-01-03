@@ -2,18 +2,26 @@ package dao
 
 import (
 	"github.com/MounirOnGithub/go-rest-service/model"
-	"github.com/Sirupsen/logrus"
+	"gopkg.in/mgo.v2"
+	"github.com/satori/go.uuid"
+	"gopkg.in/mgo.v2/bson"
+	"fmt"
+)
+
+const (
+	database string = "go-rest-service"
+	collection string = "user"
 )
 
 // Mdb mocking database
 type Mdb struct {
-	User *model.User
+	Session *mgo.Session
 }
 
 // NewDao returns a Mdb
-func NewDao() (Dao, error) {
+func NewDao(session *mgo.Session) (Dao, error) {
 	dm := &Mdb{
-		User: user,
+		Session: session,
 	}
 
 	return dm, nil
@@ -21,30 +29,61 @@ func NewDao() (Dao, error) {
 
 // AddUser create a new user in db
 func (dm *Mdb) AddUser(user *model.User) (*model.User, error) {
-	logrus.WithField("user", user.ID).Debug("AddUser")
-	return dm.User, nil
+	user.ID = uuid.NewV4().String()
+	session := dm.Session.Copy()
+
+	c := session.DB(database).C(collection)
+	err := c.Insert(*user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // DeleteUser delete a user from db
 func (dm *Mdb) DeleteUser(userID string) error {
-	logrus.WithField("user ID", userID).Debug("DeleteUser")
+	session := dm.Session.Copy()
+	c := session.DB(database).C(collection)
+	err := c.RemoveId(userID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // GetUserByID returns a user from db
 func (dm *Mdb) GetUserByID(userID string) (*model.User, error) {
-	logrus.WithField("user ID", userID).Debug("GetUserByID")
-	return dm.User, nil
+	session := dm.Session.Copy()
+
+	c := session.DB(database).C(collection)
+	u := &model.User{}
+	err := c.FindId(userID).One(u)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 // GetUserByUserName returns a mocked user
 func (dm *Mdb) GetUserByUserName(userName string) (*model.User, error) {
-	logrus.WithField("username", userName).Debug("GetUserByUserName")
-	return dm.User, nil
+	session := dm.Session.Copy()
+
+	c := session.DB(database).C(collection)
+	u := &model.User{}
+	err := c.Find(bson.M{"username": userName}).One(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
 // UpdateUser modify a user from db
 func (dm *Mdb) UpdateUser(user *model.User) (*model.User, error) {
-	logrus.WithField("user ID", dm.User.ID).Debug("UpdateUser")
-	return dm.User, nil
+	session := dm.Session.Copy()
+	fmt.Println(*user)
+
+	c := session.DB(database).C(collection)
+	c.UpdateId(user.ID, user)
+	return user, nil
 }
