@@ -2,14 +2,13 @@ package dao
 
 import (
 	"github.com/MounirOnGithub/go-rest-service/model"
-	"gopkg.in/mgo.v2"
 	"github.com/satori/go.uuid"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"fmt"
 )
 
 const (
-	database string = "go-rest-service"
+	database   string = "go-rest-service"
 	collection string = "user"
 )
 
@@ -81,9 +80,14 @@ func (dm *Mdb) GetUserByUserName(userName string) (*model.User, error) {
 // UpdateUser modify a user from db
 func (dm *Mdb) UpdateUser(user *model.User) (*model.User, error) {
 	session := dm.Session.Copy()
-	fmt.Println(*user)
 
 	c := session.DB(database).C(collection)
-	c.UpdateId(user.ID, user)
+	c.UpdateId(user.ID, bson.M{
+		"$set": bson.M{
+			"name":     user.Name,
+			"surname":  user.Surname,
+			"username": user.Username,
+		},
+	})
 	return user, nil
 }

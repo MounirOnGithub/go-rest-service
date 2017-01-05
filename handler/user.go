@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"encoding/base64"
 )
 
 // UserHandler handler containing dao
@@ -53,8 +53,8 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 
 	user := &model.User{
 		Username: username,
-		Name: name,
-		Surname: surname,
+		Name:     name,
+		Surname:  surname,
 	}
 
 	user.Password = base64.StdEncoding.EncodeToString(password)
@@ -144,6 +144,8 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
+
+	// TODO: Password verification
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
