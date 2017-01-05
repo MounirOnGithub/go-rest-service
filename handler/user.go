@@ -12,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"encoding/base64"
 )
 
 // UserHandler handler containing dao
