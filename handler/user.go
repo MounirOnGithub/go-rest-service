@@ -12,7 +12,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"encoding/base64"
 )
 
 // UserHandler handler containing dao
@@ -146,7 +145,11 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Password verification
+	if user.Password != password {
+		logrus.Warn("Wrong password or username")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
 
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
