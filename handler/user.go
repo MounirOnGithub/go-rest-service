@@ -12,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/asaskevich/govalidator"
 )
 
 // UserHandler handler containing dao
@@ -37,7 +38,6 @@ func (uh *UserHandler) IfUserExist(userName string) bool {
 
 // AddUser POST a new user
 func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
-	// Add fields of user struct
 	username := r.FormValue("username")
 	password := []byte(r.FormValue("password"))
 	name := r.FormValue("name")
@@ -48,12 +48,12 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		Name:     name,
 		Surname:  surname,
 	}
-
 	user.Password = base64.StdEncoding.EncodeToString(password)
 	fmt.Println(user.Password)
 
-	if user.Password == "" {
-		logrus.Warn("Password field is emtpy or not exist")
+	v, err := govalidator.ValidateStruct(user)
+	if !v {
+		logrus.WithField("valid struct", v).Error("Invalid structure")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
@@ -66,7 +66,7 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.dao.AddUser(user)
+	user, err = uh.dao.AddUser(user)
 	if err != nil {
 		logrus.WithField("err=", err).Warn("Error while updating user")
 	}
