@@ -43,14 +43,6 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	surname := r.FormValue("surname")
 
-	// Verify if the user exist
-	exist := uh.IfUserExist(username)
-	if exist {
-		logrus.WithField("username=", username).Warn("User already exists")
-		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
-		return
-	}
-
 	user := &model.User{
 		Username: username,
 		Name:     name,
@@ -58,6 +50,21 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.Password = base64.StdEncoding.EncodeToString(password)
+	fmt.Println(user.Password)
+
+	if user.Password == "" {
+		logrus.Warn("Password field is emtpy or not exist")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
+
+	// Verify if the user exist
+	exist := uh.IfUserExist(username)
+	if exist {
+		logrus.WithField("username", username).Warn("User already exists")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
+	}
 
 	user, err := uh.dao.AddUser(user)
 	if err != nil {
