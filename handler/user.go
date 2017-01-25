@@ -10,9 +10,9 @@ import (
 	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
+	"github.com/asaskevich/govalidator"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/asaskevich/govalidator"
 )
 
 // UserHandler handler containing dao
@@ -39,7 +39,6 @@ func (uh *UserHandler) IfUserExist(userName string) bool {
 // AddUser POST a new user
 func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
-	password := []byte(r.FormValue("password"))
 	name := r.FormValue("name")
 	surname := r.FormValue("surname")
 
@@ -47,9 +46,12 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 		Username: username,
 		Name:     name,
 		Surname:  surname,
+		Enabled:  true,
+		Roles: []string{
+			model.RoleUser,
+		},
 	}
-	user.Password = base64.StdEncoding.EncodeToString(password)
-	fmt.Println(user.Password)
+	user.Password = base64.StdEncoding.EncodeToString([]byte(r.FormValue("password")))
 
 	v, err := govalidator.ValidateStruct(user)
 	if !v {
@@ -164,6 +166,8 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 
 	if user != nil {
 		c.UserName = user.Username
+		c.Roles = user.Roles
+		c.Enabled = user.Enabled
 		c.StandardClaims = jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
 		}
@@ -185,6 +189,6 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 
 // Hello handler saying hello
 func (uh *UserHandler) Hello(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context().Value("claims")
-	fmt.Fprintf(w, "Context : \n %+v", ctx)
+	claims := r.Context().Value("claims").(*utils.Claims)
+	fmt.Fprintf(w, "Enabled %v", claims.Enabled)
 }

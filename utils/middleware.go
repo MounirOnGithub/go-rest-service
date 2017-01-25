@@ -12,6 +12,8 @@ import (
 // Claims claims of the jwt
 type Claims struct {
 	UserName string
+	Roles []string
+	Enabled bool
 	jwt.StandardClaims
 }
 
