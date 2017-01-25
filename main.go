@@ -116,7 +116,7 @@ func main() {
 
 		// User sub router
 		userSubRouter := mux.NewRouter().PathPrefix("/user").Subrouter().StrictSlash(true)
-		userSubRouter.HandleFunc("/", uh.Hello).Methods(http.MethodGet)
+		// userSubRouter.Handle("/", negroni.New(negroni.HandlerFunc(utils.RolesVerificationMiddleware(model.RoleAdmin)))).Methods(http.MethodGet)
 		userSubRouter.HandleFunc("/{id}", uh.UpdateUserByID).Methods(http.MethodPut)
 		userSubRouter.HandleFunc("/{id}", uh.DeleteUserByID).Methods(http.MethodDelete)
 		userSubRouter.HandleFunc("/{id}", uh.GetUserByID).Methods(http.MethodGet)
@@ -124,7 +124,6 @@ func main() {
 		// Using middleware for the user sub router
 		r.PathPrefix("/user").Handler(negroni.New(
 			negroni.HandlerFunc(utils.JWTValidationMiddleware),
-			negroni.HandlerFunc(utils.RolesAndUserVerification),
 			negroni.Wrap(userSubRouter),
 		))
 

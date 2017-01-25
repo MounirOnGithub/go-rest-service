@@ -58,26 +58,42 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 
 	logrus.WithField("Authorization header", authorization).Warn("Invalid jwt token, check key or alg")
 	JSONWithHTTPCode(rw, MsgTokenMalformed, http.StatusUnauthorized)
-
-	next(rw, r)
+	return
 }
 
-// RolesAndUserVerification validation of user roles and check if it is enabled
-func RolesAndUserVerification(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	c := GetClaimsFromContext(r)
+// RolesVerificationMiddleware check permissions
+func RolesVerificationMiddleware(s string) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		logrus.Info("Role", s)
+		claims := GetClaimsFromContext(r)
+		roles := claims.Roles
 
-	// Not enabled user receive a 403 error code
-	if !c.Enabled {
-		logrus.WithField("Enabled", c.Enabled).Warn("User not enabled.")
-		JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
-		return
+		if !claims.Enabled {
+			logrus.WithField("User enabled", claims.Enabled).Warn("User not enabled")
+			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
+			return
+		}
+
+		if !isAllowed(roles, s) {
+			logrus.WithField("role", s).Warn("Forbidden")
+			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
+			return
+		}
+
+		next(rw, r)
+	}
+}
+
+// expectedRole check if the role is expected or not
+func isAllowed(r []string, e string) bool {
+	if len(r) == 0 {
+		return false
 	}
 
-	if len(c.Roles) == 0 {
-		logrus.WithField("Roles", c.Roles).Error("User does not have any rights")
-		JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
-		return
+	for _, v := range r {
+		if v == e {
+			return true
+		}
 	}
-
-	next(rw, r)
+	return false
 }
