@@ -187,8 +187,8 @@ func (uh *UserHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	utils.JSONWithHTTPCode(w, auth, http.StatusCreated)
 }
 
-// Hello handler saying hello
+// Hello handler saying hello to the user red from claims
 func (uh *UserHandler) Hello(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*utils.Claims)
-	fmt.Fprintf(w, "Enabled %v", claims.Enabled)
+	c := utils.GetClaimsFromContext(r)
+	fmt.Fprintf(w, " Hello %v", c.UserName)
 }

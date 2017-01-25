@@ -37,3 +37,8 @@ func JSONWithHTTPCode(w http.ResponseWriter, d interface{}, code int) {
 func JSON(w http.ResponseWriter, d interface{}) {
 	JSONWithHTTPCode(w, d, http.StatusOK)
 }
+
+// GetClaimsFromContext return the claims written in the context from a middleware
+func GetClaimsFromContext(r *http.Request) *Claims {
+	return r.Context().Value("claims").(*Claims)
+}
