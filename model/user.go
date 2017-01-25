@@ -1,7 +1,9 @@
 package model
 
 const (
-	RoleUser  string = "User"
+	// RoleUser CRU
+	RoleUser string = "User"
+	// RoleAdmin CRUD
 	RoleAdmin string = "Admin"
 )
 
