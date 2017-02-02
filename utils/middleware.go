@@ -74,12 +74,18 @@ func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Req
 			return
 		}
 
+		p := false
 		for _, v := range s {
-			if !isAllowed(roles, v) {
-				logrus.WithField("role", s).Warn("Forbidden")
-				JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
-				return
+			p = isAllowed(roles, v)
+			if p {
+				break
 			}
+		}
+
+		if !p {
+			logrus.WithField("role", s).Warn("Forbidden")
+			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
+			return
 		}
 
 		next(rw, r)
