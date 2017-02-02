@@ -9,6 +9,7 @@ import (
 
 	"github.com/MounirOnGithub/go-rest-service/dao"
 	"github.com/MounirOnGithub/go-rest-service/handler"
+	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/MounirOnGithub/go-rest-service/utils"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -118,7 +119,10 @@ func main() {
 		userSubRouter := mux.NewRouter().PathPrefix("/user").Subrouter().StrictSlash(true)
 		// userSubRouter.Handle("/", negroni.New(negroni.HandlerFunc(utils.RolesVerificationMiddleware(model.RoleAdmin)))).Methods(http.MethodGet)
 		userSubRouter.HandleFunc("/{id}", uh.UpdateUserByID).Methods(http.MethodPut)
-		userSubRouter.HandleFunc("/{id}", uh.DeleteUserByID).Methods(http.MethodDelete)
+		userSubRouter.Handle("/{id}", negroni.New(
+			negroni.HandlerFunc(utils.RolesVerificationMiddleware([]string{model.RoleAdmin})),
+			negroni.HandlerFunc(uh.DeleteUserByID),
+		)).Methods(http.MethodDelete)
 		userSubRouter.HandleFunc("/{id}", uh.GetUserByID).Methods(http.MethodGet)
 
 		// Using middleware for the user sub router

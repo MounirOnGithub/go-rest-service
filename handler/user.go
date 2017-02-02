@@ -120,7 +120,7 @@ func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteUserByID deleting a user by its ID
-func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) DeleteUserByID(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
