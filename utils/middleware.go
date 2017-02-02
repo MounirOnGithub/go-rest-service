@@ -62,7 +62,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 }
 
 // RolesVerificationMiddleware check permissions
-func RolesVerificationMiddleware(s string) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		logrus.Info("Role", s)
 		claims := GetClaimsFromContext(r)
@@ -74,24 +74,26 @@ func RolesVerificationMiddleware(s string) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		if !isAllowed(roles, s) {
-			logrus.WithField("role", s).Warn("Forbidden")
-			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
-			return
+		for _, v := range s {
+			if !isAllowed(roles, v) {
+				logrus.WithField("role", s).Warn("Forbidden")
+				JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
+				return
+			}
 		}
 
 		next(rw, r)
 	}
 }
 
-// expectedRole check if the role is expected or not
-func isAllowed(r []string, e string) bool {
+// isAllowed check if the role is expected or not
+func isAllowed(r []string, expected string) bool {
 	if len(r) == 0 {
 		return false
 	}
 
 	for _, v := range r {
-		if v == e {
+		if v == expected {
 			return true
 		}
 	}
