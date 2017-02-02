@@ -117,7 +117,6 @@ func main() {
 
 		// User sub router
 		userSubRouter := mux.NewRouter().PathPrefix("/user").Subrouter().StrictSlash(true)
-		// userSubRouter.Handle("/", negroni.New(negroni.HandlerFunc(utils.RolesVerificationMiddleware(model.RoleAdmin)))).Methods(http.MethodGet)
 		userSubRouter.HandleFunc("/{id}", uh.UpdateUserByID).Methods(http.MethodPut)
 		userSubRouter.Handle("/{id}", negroni.New(
 			negroni.HandlerFunc(utils.RolesVerificationMiddleware([]string{model.RoleAdmin})),
