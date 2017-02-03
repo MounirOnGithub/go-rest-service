@@ -122,7 +122,10 @@ func main() {
 			negroni.HandlerFunc(utils.RolesVerificationMiddleware([]string{model.RoleAdmin})),
 			negroni.HandlerFunc(uh.DeleteUserByID),
 		)).Methods(http.MethodDelete)
-		userSubRouter.HandleFunc("/{id}", uh.GetUserByID).Methods(http.MethodGet)
+		userSubRouter.Handle("/{id}", negroni.New(
+			negroni.HandlerFunc(utils.OwningResourceMiddleware()),
+			negroni.HandlerFunc(uh.GetUserByID),
+		)).Methods(http.MethodGet)
 
 		// Using middleware for the user sub router
 		r.PathPrefix("/user").Handler(negroni.New(

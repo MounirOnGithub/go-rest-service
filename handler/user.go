@@ -78,7 +78,7 @@ func (uh *UserHandler) AddUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserByID fetch a user by its ID
-func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 	user := &model.User{}
@@ -107,8 +107,12 @@ func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
+	if len(user.Roles) > 0 {
+
+	}
 
 	userModified, err := uh.dao.UpdateUser(user)
+	fmt.Printf("user modified roles %v", userModified.Roles)
 	if err != nil {
 		logrus.WithField("err=", err).Warn("Error while updating user")
 		utils.JSONWithHTTPCode(w, utils.MsgInternalServerError, http.StatusInternalServerError)

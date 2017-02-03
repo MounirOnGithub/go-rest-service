@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/MounirOnGithub/go-rest-service/dao"
+	"github.com/MounirOnGithub/go-rest-service/model"
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 )
 
 // Claims claims of the jwt
@@ -64,7 +67,6 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 // RolesVerificationMiddleware check permissions
 func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		logrus.Info("Role", s)
 		claims := GetClaimsFromContext(r)
 		roles := claims.Roles
 
@@ -83,7 +85,7 @@ func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Req
 		}
 
 		if !p {
-			logrus.WithField("role", s).Warn("Forbidden")
+			logrus.WithField("role expected", s).Warn("Forbidden")
 			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
 			return
 		}
@@ -104,4 +106,49 @@ func isAllowed(r []string, expected string) bool {
 		}
 	}
 	return false
+}
+
+// OwningResourceMiddleware verify that the client is requesting only a ressource that it's owning
+func OwningResourceMiddleware() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		claims := GetClaimsFromContext(r)
+
+		if isAllowed(claims.Roles, model.RoleAdmin) {
+			next(rw, r)
+		}
+
+		var d dao.Dao
+		session, err := dao.GetSession()
+		if err != nil {
+			logrus.WithError(err).Warn("Error while retrieving mongo session")
+			JSONWithHTTPCode(rw, MsgInternalServerError, http.StatusInternalServerError)
+			return
+		}
+
+		d, err = dao.NewDao(session)
+		if err != nil {
+			logrus.WithError(err).Warn("Error while creation a new Dao")
+			JSONWithHTTPCode(rw, MsgInternalServerError, http.StatusInternalServerError)
+			return
+		}
+
+		usrName := claims.UserName
+		vars := mux.Vars(r)
+		userID := vars["id"]
+
+		u, err := d.GetUserByUserName(usrName)
+		if err != nil {
+			logrus.WithError(err).Warn("Error while retrieving user in database")
+			JSONWithHTTPCode(rw, MsgEntityDoesNotExist, http.StatusNotFound)
+			return
+		}
+
+		if u.ID != userID {
+			logrus.WithField("user ID", userID).Error("User is not the owner of this resource")
+			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
+			return
+		}
+
+		next(rw, r)
+	}
 }
