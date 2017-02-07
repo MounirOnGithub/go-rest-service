@@ -1,0 +1,14 @@
+go-rest-service:
+    build: ./go-rest-service
+    expose: 
+        - "3000"
+    volumes:
+        - ./api:/go/src/github.com/MounirOnGithub
+    links:
+        - database
+    environment:
+        - DB_NAME=go-rs
+
+database:  
+    image: mongo:3.0
+    command: mongod --logpath=/dev/null
