@@ -67,6 +67,7 @@ func JWTValidationMiddleware(rw http.ResponseWriter, r *http.Request, next http.
 // RolesVerificationMiddleware check permissions
 func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+
 		claims := GetClaimsFromContext(r)
 		roles := claims.Roles
 
@@ -75,7 +76,6 @@ func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Req
 			JSONWithHTTPCode(rw, MsgTokenIsRevoked, http.StatusForbidden)
 			return
 		}
-
 		p := false
 		for _, v := range s {
 			p = isAllowed(roles, v)
@@ -92,20 +92,6 @@ func RolesVerificationMiddleware(s []string) func(http.ResponseWriter, *http.Req
 
 		next(rw, r)
 	}
-}
-
-// isAllowed check if the role is expected or not
-func isAllowed(r []string, expected string) bool {
-	if len(r) == 0 {
-		return false
-	}
-
-	for _, v := range r {
-		if v == expected {
-			return true
-		}
-	}
-	return false
 }
 
 // OwningResourceMiddleware verify that the client is requesting only a ressource that it's owning
@@ -151,4 +137,18 @@ func OwningResourceMiddleware() func(http.ResponseWriter, *http.Request, http.Ha
 
 		next(rw, r)
 	}
+}
+
+// isAllowed check if the role is expected or not
+func isAllowed(r []string, expected string) bool {
+	if len(r) == 0 {
+		return false
+	}
+
+	for _, v := range r {
+		if v == expected {
+			return true
+		}
+	}
+	return false
 }
