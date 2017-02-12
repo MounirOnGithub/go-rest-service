@@ -96,19 +96,27 @@ func (uh *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request, next 
 // UpdateUserByID PUT modify a user by ID
 func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-
 	userID := vars["id"]
-	user := &model.User{}
-	user.ID = userID
 
-	err := utils.GetJSONContent(&user, r)
+	existingUser, err := uh.dao.GetUserByID(userID)
+	if err != nil {
+		logrus.WithField("user ID", userID).Error(err)
+		utils.JSONWithHTTPCode(w, utils.MsgEntityDoesNotExist, http.StatusNotFound)
+		return
+	}
+
+	user := &model.User{}
+	err = utils.GetJSONContent(&user, r)
 	if err != nil {
 		logrus.WithField("err= ", err).Warn("Error while retrieving user")
 		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
 		return
 	}
-	if len(user.Roles) > 0 {
 
+	if len(user.Roles) != len(existingUser.Roles) {
+		logrus.WithField("lenght roles", len(user.Roles)).Error("Cannot modify Roles")
+		utils.JSONWithHTTPCode(w, utils.MsgBadParameter, http.StatusBadRequest)
+		return
 	}
 
 	userModified, err := uh.dao.UpdateUser(user)
