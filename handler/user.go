@@ -105,7 +105,9 @@ func (uh *UserHandler) UpdateUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &model.User{}
+	user := &model.User{
+		ID: existingUser.ID,
+	}
 	err = utils.GetJSONContent(&user, r)
 	if err != nil {
 		logrus.WithField("err= ", err).Warn("Error while retrieving user")
